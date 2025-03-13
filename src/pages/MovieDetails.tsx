@@ -10,7 +10,8 @@ import {
   Heart, 
   Share2, 
   ArrowLeft,
-  X
+  X,
+  Check
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import MediaRow from '@/components/MediaRow';
