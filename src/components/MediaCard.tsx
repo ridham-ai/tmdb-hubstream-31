@@ -11,9 +11,10 @@ interface MediaCardProps {
   media: Movie | TVShow;
   mediaType: 'movie' | 'tv';
   className?: string;
+  style?: React.CSSProperties;
 }
 
-const MediaCard: React.FC<MediaCardProps> = ({ media, mediaType, className }) => {
+const MediaCard: React.FC<MediaCardProps> = ({ media, mediaType, className, style }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const { toast } = useToast();
@@ -44,6 +45,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ media, mediaType, className }) =>
         isHovered ? "scale-[1.02] z-10" : "scale-100 z-0",
         className
       )}
+      style={style}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -11,7 +10,8 @@ import {
   Share2, 
   ArrowLeft,
   X,
-  List
+  List,
+  Tv
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import MediaRow from '@/components/MediaRow';
@@ -63,15 +63,19 @@ const TVDetails: React.FC = () => {
     queryKey: ['tvVideos', id],
     queryFn: () => getTVShowVideos(id!),
     enabled: !!id,
-    onSuccess: (data) => {
-      const trailer = data.results.find(
+  });
+  
+  // Watch for video data changes and set trailer key
+  useEffect(() => {
+    if (videosData?.results) {
+      const trailer = videosData.results.find(
         (video) => video.type === 'Trailer' && video.site === 'YouTube'
       );
       if (trailer) {
         setTrailerKey(trailer.key);
       }
-    },
-  });
+    }
+  }, [videosData]);
   
   // Format runtime
   const formatRuntime = (minutes: number) => {
@@ -344,7 +348,7 @@ const TVDetails: React.FC = () => {
                         />
                       ) : (
                         <div className="w-16 h-24 bg-secondary/50 rounded flex items-center justify-center">
-                          <Tv2 className="w-8 h-8 text-muted-foreground" />
+                          <Tv className="w-8 h-8 text-muted-foreground" />
                         </div>
                       )}
                       <div className="flex flex-col">

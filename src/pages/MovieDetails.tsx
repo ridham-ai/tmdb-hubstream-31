@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -9,7 +8,8 @@ import {
   Star, 
   Heart, 
   Share2, 
-  ArrowLeft
+  ArrowLeft,
+  X
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import MediaRow from '@/components/MediaRow';
@@ -61,15 +61,19 @@ const MovieDetails: React.FC = () => {
     queryKey: ['movieVideos', id],
     queryFn: () => getMovieVideos(id!),
     enabled: !!id,
-    onSuccess: (data) => {
-      const trailer = data.results.find(
+  });
+  
+  // Watch for video data changes and set trailer key
+  useEffect(() => {
+    if (videosData?.results) {
+      const trailer = videosData.results.find(
         (video) => video.type === 'Trailer' && video.site === 'YouTube'
       );
       if (trailer) {
         setTrailerKey(trailer.key);
       }
-    },
-  });
+    }
+  }, [videosData]);
   
   // Format runtime
   const formatRuntime = (minutes: number) => {
