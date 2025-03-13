@@ -112,3 +112,11 @@ export interface VideosResponse {
   id: number;
   results: VideoResult[];
 }
+
+// Add the missing TMDBResponse interface
+export interface TMDBResponse<T> {
+  page: number;
+  results: T[];
+  total_pages: number;
+  total_results: number;
+}
