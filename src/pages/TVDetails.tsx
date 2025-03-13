@@ -209,12 +209,10 @@ const TVDetails: React.FC = () => {
             
             <div className="mt-6 space-y-3">
               <button
-                onClick={() => trailerKey && setIsTrailerOpen(true)}
-                disabled={!trailerKey}
                 className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors"
               >
                 <Play className="w-5 h-5" />
-                Watch Trailer
+                Watch Now
               </button>
               
               <div className="flex gap-3">
@@ -248,6 +246,16 @@ const TVDetails: React.FC = () => {
             
             {tvShow.tagline && (
               <p className="text-lg text-muted-foreground mb-4 italic">"{tvShow.tagline}"</p>
+            )}
+            
+            {trailerKey && (
+              <button
+                onClick={() => setIsTrailerOpen(true)}
+                className="flex items-center gap-2 text-primary hover:text-primary/80 mb-4 transition-colors"
+              >
+                <Play className="w-4 h-4" />
+                Watch Trailer
+              </button>
             )}
             
             {/* Stats */}

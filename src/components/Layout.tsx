@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Film, Tv2, Home, Heart, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Input } from '@/components/ui/input';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,7 +13,9 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -41,6 +44,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     if (path === '/' && location.pathname === '/') return true;
     if (path !== '/' && location.pathname.startsWith(path)) return true;
     return false;
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   return (
@@ -78,9 +88,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </nav>
             
             <div className="flex items-center space-x-4">
+              <form onSubmit={handleSearch} className="relative hidden md:block">
+                <div className="relative">
+                  <Input 
+                    type="text"
+                    placeholder="Search movies & TV..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-48 lg:w-64 h-9 rounded-full pl-9 pr-3 bg-background/20 dark:bg-black/40 border-muted-foreground/30 focus-visible:ring-primary"
+                  />
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </form>
+              
+              {/* Mobile search button */}
               <Link 
                 to="/search" 
-                className="p-2 rounded-full hover:bg-secondary/80 transition-colors"
+                className="md:hidden p-2 rounded-full hover:bg-secondary/80 transition-colors"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5" />
@@ -104,6 +128,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="fixed inset-0 z-40 bg-background/95 dark:bg-black/95 backdrop-blur-sm md:hidden animate-fade-in">
           <div className="pt-20 p-4">
             <nav className="flex flex-col items-center space-y-6">
+              <form onSubmit={handleSearch} className="relative w-full mb-4">
+                <div className="relative">
+                  <Input 
+                    type="text"
+                    placeholder="Search movies & TV..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 bg-background/20 dark:bg-black/40 border-muted-foreground/30 focus-visible:ring-primary"
+                  />
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </form>
+              
               {navItems.map((item) => (
                 <Link
                   key={item.name}
@@ -119,13 +156,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   {item.name}
                 </Link>
               ))}
-              <Link
-                to="/search"
-                className="flex items-center text-lg font-medium py-2 px-4 rounded-md transition-colors hover:bg-secondary/80"
-              >
-                <Search className="w-4 h-4 mr-2" />
-                Search
-              </Link>
             </nav>
           </div>
         </div>
