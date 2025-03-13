@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Star, CalendarDays, Play, Plus } from 'lucide-react';
+import { Star, CalendarDays, Play, Plus, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Movie, TVShow } from '@/types/tmdb';
 import { getPosterUrl } from '@/services/tmdbService';
 import { useToast } from '@/hooks/use-toast';
+import { useWatchlist } from '@/context/WatchlistContext';
 
 interface MediaCardProps {
   media: Movie | TVShow;
@@ -18,21 +19,37 @@ const MediaCard: React.FC<MediaCardProps> = ({ media, mediaType, className, styl
   const [isLoaded, setIsLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const { toast } = useToast();
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
 
   const title = 'title' in media ? media.title : media.name;
   const releaseDate = 'release_date' in media ? media.release_date : media.first_air_date;
   const year = releaseDate ? new Date(releaseDate).getFullYear() : '';
   
-  const handleAddToWatchlist = (e: React.MouseEvent) => {
+  const inWatchlist = isInWatchlist(media.id, mediaType);
+  
+  const handleWatchlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // In a real app, we would add to localStorage or database
-    toast({
-      title: "Added to Watchlist",
-      description: `${title} has been added to your watchlist.`,
-      duration: 3000,
-    });
+    if (inWatchlist) {
+      removeFromWatchlist(media.id, mediaType);
+      toast({
+        title: "Removed from Watchlist",
+        description: `${title} has been removed from your watchlist.`,
+        duration: 3000,
+      });
+    } else {
+      addToWatchlist({
+        id: media.id,
+        mediaType,
+        media,
+      });
+      toast({
+        title: "Added to Watchlist",
+        description: `${title} has been added to your watchlist.`,
+        duration: 3000,
+      });
+    }
   };
 
   return (
@@ -104,11 +121,14 @@ const MediaCard: React.FC<MediaCardProps> = ({ media, mediaType, className, styl
           </button>
           
           <button 
-            className="flex items-center justify-center p-1.5 bg-white/20 hover:bg-white/30 rounded-md backdrop-blur-sm transition-colors"
-            onClick={handleAddToWatchlist}
-            aria-label="Add to watchlist"
+            className={cn(
+              "flex items-center justify-center p-1.5 rounded-md backdrop-blur-sm transition-colors",
+              inWatchlist ? "bg-green-500/30 hover:bg-green-500/40" : "bg-white/20 hover:bg-white/30"
+            )}
+            onClick={handleWatchlistToggle}
+            aria-label={inWatchlist ? "Remove from watchlist" : "Add to watchlist"}
           >
-            <Plus className="w-4 h-4" />
+            {inWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           </button>
         </div>
       </div>
