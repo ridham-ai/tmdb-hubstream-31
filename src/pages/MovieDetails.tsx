@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -25,12 +26,14 @@ import {
 import { MovieDetails as MovieDetailsType, Credit } from '@/types/tmdb';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useWatchlist } from '@/context/WatchlistContext';
 
 const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const { toast } = useToast();
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   
   // Fetch movie details
   const { data: movie, isLoading: isLoadingMovie } = useQuery({
@@ -75,6 +78,9 @@ const MovieDetails: React.FC = () => {
     }
   }, [videosData]);
   
+  // Check if movie is in watchlist
+  const inWatchlist = movie ? isInWatchlist(movie.id, 'movie') : false;
+  
   // Format runtime
   const formatRuntime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -94,21 +100,39 @@ const MovieDetails: React.FC = () => {
   // Get cast
   const cast = credits?.cast.slice(0, 10) || [];
   
-  // Handle add to watchlist
-  const handleAddToWatchlist = () => {
-    toast({
-      title: "Added to Watchlist",
-      description: `${movie?.title} has been added to your watchlist.`,
-      duration: 3000,
-    });
+  // Handle watchlist toggle
+  const handleWatchlistToggle = () => {
+    if (!movie) return;
+    
+    if (inWatchlist) {
+      removeFromWatchlist(movie.id, 'movie');
+      toast({
+        title: "Removed from Watchlist",
+        description: `${movie.title} has been removed from your watchlist.`,
+        duration: 3000,
+      });
+    } else {
+      addToWatchlist({
+        id: movie.id,
+        mediaType: 'movie',
+        media: movie,
+      });
+      toast({
+        title: "Added to Watchlist",
+        description: `${movie.title} has been added to your watchlist.`,
+        duration: 3000,
+      });
+    }
   };
   
   // Handle share
   const handleShare = () => {
+    if (!movie) return;
+    
     if (navigator.share) {
       navigator.share({
-        title: movie?.title,
-        text: movie?.overview,
+        title: movie.title,
+        text: movie.overview,
         url: window.location.href,
       }).catch((error) => console.log('Error sharing', error));
     } else {
@@ -192,11 +216,16 @@ const MovieDetails: React.FC = () => {
               
               <div className="flex gap-3">
                 <button
-                  onClick={handleAddToWatchlist}
-                  className="flex-1 flex items-center justify-center gap-2 bg-secondary/80 hover:bg-secondary text-foreground py-3 px-4 rounded-lg transition-colors"
+                  onClick={handleWatchlistToggle}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-colors",
+                    inWatchlist 
+                      ? "bg-green-600/80 hover:bg-green-600 text-white" 
+                      : "bg-secondary/80 hover:bg-secondary text-foreground"
+                  )}
                 >
-                  <Heart className="w-5 h-5" />
-                  Watchlist
+                  {inWatchlist ? <Check className="w-5 h-5" /> : <Heart className="w-5 h-5" />}
+                  {inWatchlist ? "In Watchlist" : "Add to Watchlist"}
                 </button>
                 
                 <button

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, CalendarDays, Play, Plus, Check } from 'lucide-react';
@@ -90,7 +89,6 @@ const MediaCard: React.FC<MediaCardProps> = ({ media, mediaType, className, styl
         )}
       </div>
       
-      {/* Hover content */}
       <div className={cn(
         "absolute inset-0 flex flex-col justify-end p-3 text-white",
         "opacity-0 group-hover:opacity-100 transition-opacity duration-300"
