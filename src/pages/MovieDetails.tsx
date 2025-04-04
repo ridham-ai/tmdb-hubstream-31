@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { X } from 'lucide-react';
 import Layout from '@/components/Layout';
 import MediaRow from '@/components/MediaRow';
 import MovieHero from '@/components/movie/MovieHero';
@@ -23,6 +24,7 @@ const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const { toast } = useToast();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   
@@ -136,6 +138,25 @@ const MovieDetails: React.FC = () => {
     }
   };
   
+  // Handle watch now click
+  const handleWatchNow = () => {
+    if (!id) return;
+    setIsPlayerOpen(true);
+  };
+  
+  useEffect(() => {
+    // Disable body scroll when player is open
+    if (isPlayerOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isPlayerOpen]);
+  
   if (isLoadingMovie) {
     return (
       <Layout>
@@ -161,9 +182,33 @@ const MovieDetails: React.FC = () => {
   
   return (
     <Layout>
-      <MovieHero movie={movie} />
+      {/* Videasy Player */}
+      {isPlayerOpen && (
+        <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+          <button
+            onClick={() => setIsPlayerOpen(false)}
+            className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
+          >
+            <X className="w-6 h-6" />
+            <span className="sr-only">Close</span>
+          </button>
+          <iframe
+            src={`https://player.videasy.net/movie/${movie.id}`}
+            className="w-full h-full"
+            allowFullScreen
+            allow="autoplay; encrypted-media; picture-in-picture"
+          ></iframe>
+        </div>
+      )}
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <MovieHero 
+        movie={movie} 
+        trailerKey={trailerKey}
+        setIsTrailerOpen={setIsTrailerOpen}
+        onWatchNow={handleWatchNow}
+      />
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-16 relative z-10">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Poster with Action Buttons */}
           <MoviePoster 
@@ -171,6 +216,7 @@ const MovieDetails: React.FC = () => {
             handleWatchlistToggle={handleWatchlistToggle} 
             handleShare={handleShare} 
             inWatchlist={inWatchlist}
+            onWatchNow={handleWatchNow}
           />
           
           {/* Movie Info Section */}
