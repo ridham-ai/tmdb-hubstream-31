@@ -2,17 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search as SearchIcon, Film, Tv2, X } from 'lucide-react';
+import { Search as SearchIcon, Film, Tv2, LayoutGrid, X } from 'lucide-react';
 import Layout from '@/components/Layout';
 import MediaGrid from '@/components/MediaGrid';
 import { searchMovies, searchTVShows } from '@/services/tmdbService';
 import { cn } from '@/lib/utils';
+import { Movie, TVShow } from '@/types/tmdb';
 
 const Search: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-  const [activeTab, setActiveTab] = useState<'movies' | 'tv'>(
-    (searchParams.get('type') as 'movies' | 'tv') || 'movies'
+  const [activeTab, setActiveTab] = useState<'all' | 'movies' | 'tv'>(
+    (searchParams.get('type') as 'all' | 'movies' | 'tv') || 'all'
   );
   const [page, setPage] = useState(1);
   
@@ -29,14 +30,14 @@ const Search: React.FC = () => {
     setPage(1);
   }, [searchTerm, activeTab]);
   
-  // Search query
+  // Search queries
   const {
     data: movieResults,
     isLoading: isLoadingMovies,
   } = useQuery({
     queryKey: ['searchMovies', searchTerm, page],
     queryFn: () => searchMovies(searchTerm, page),
-    enabled: !!searchTerm && activeTab === 'movies',
+    enabled: !!searchTerm && (activeTab === 'movies' || activeTab === 'all'),
   });
   
   const {
@@ -45,7 +46,7 @@ const Search: React.FC = () => {
   } = useQuery({
     queryKey: ['searchTVShows', searchTerm, page],
     queryFn: () => searchTVShows(searchTerm, page),
-    enabled: !!searchTerm && activeTab === 'tv',
+    enabled: !!searchTerm && (activeTab === 'tv' || activeTab === 'all'),
   });
   
   const handleSearch = (e: React.FormEvent) => {
@@ -60,11 +61,54 @@ const Search: React.FC = () => {
     setPage(1);
   };
   
-  // Get current results based on active tab
-  const results = activeTab === 'movies' ? movieResults?.results : tvResults?.results;
-  const totalResults = activeTab === 'movies' ? movieResults?.total_results : tvResults?.total_results;
-  const totalPages = activeTab === 'movies' ? movieResults?.total_pages : tvResults?.total_pages;
-  const isLoading = activeTab === 'movies' ? isLoadingMovies : isLoadingTV;
+  // Get combined results for 'all' tab or specific results for other tabs
+  const getResults = () => {
+    if (activeTab === 'all' && movieResults?.results && tvResults?.results) {
+      const combinedResults = [
+        ...movieResults.results.map(item => ({ ...item, media_type: 'movie' })),
+        ...tvResults.results.map(item => ({ ...item, media_type: 'tv' }))
+      ];
+      // Sort by popularity (if available)
+      return combinedResults.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+    } else if (activeTab === 'movies') {
+      return movieResults?.results || [];
+    } else if (activeTab === 'tv') {
+      return tvResults?.results || [];
+    }
+    return [];
+  };
+  
+  const results = getResults();
+  const isLoading = (activeTab === 'movies' || activeTab === 'all') && isLoadingMovies || 
+                   (activeTab === 'tv' || activeTab === 'all') && isLoadingTV;
+  
+  // Calculate total results and pages for pagination
+  const getTotalResults = () => {
+    if (activeTab === 'all') {
+      const movieTotal = movieResults?.total_results || 0;
+      const tvTotal = tvResults?.total_results || 0;
+      return movieTotal + tvTotal;
+    } else if (activeTab === 'movies') {
+      return movieResults?.total_results || 0;
+    } else {
+      return tvResults?.total_results || 0;
+    }
+  };
+  
+  const getTotalPages = () => {
+    if (activeTab === 'all') {
+      const moviePages = movieResults?.total_pages || 0;
+      const tvPages = tvResults?.total_pages || 0;
+      return Math.max(moviePages, tvPages);
+    } else if (activeTab === 'movies') {
+      return movieResults?.total_pages || 0;
+    } else {
+      return tvResults?.total_pages || 0;
+    }
+  };
+  
+  const totalResults = getTotalResults();
+  const totalPages = getTotalPages();
   
   // Calculate page numbers to show
   const pageNumbers = [];
@@ -116,6 +160,19 @@ const Search: React.FC = () => {
           {/* Tabs */}
           <div className="flex space-x-4 mb-6 animate-fade-in">
             <button
+              onClick={() => setActiveTab('all')}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                activeTab === 'all'
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary/50 hover:bg-secondary/70"
+              )}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              All
+            </button>
+            
+            <button
               onClick={() => setActiveTab('movies')}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
@@ -148,14 +205,14 @@ const Search: React.FC = () => {
           <div>
             {totalResults !== undefined && (
               <p className="text-muted-foreground mb-6 animate-fade-in">
-                Found {totalResults.toLocaleString()} {activeTab === 'movies' ? 'movies' : 'TV shows'}
+                Found {totalResults.toLocaleString()} results
               </p>
             )}
             
             {results && results.length > 0 ? (
               <MediaGrid
                 items={results}
-                mediaType={activeTab === 'movies' ? 'movie' : 'tv'}
+                mediaType={activeTab === 'movies' ? 'movie' : activeTab === 'tv' ? 'tv' : 'mixed'}
                 isLoading={isLoading}
               />
             ) : !isLoading ? (
