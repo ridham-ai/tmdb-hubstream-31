@@ -37,15 +37,26 @@ const MediaGrid: React.FC<MediaGridProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-          {items.map((item, index) => (
-            <MediaCard
-              key={item.id}
-              media={item}
-              mediaType={item.media_type || mediaType}
-              className="animate-scale-in"
-              style={{ animationDelay: `${index * 0.05}s` }}
-            />
-          ))}
+          {items.map((item, index) => {
+            // Determine media type: first use item's media_type if available, then fall back to the grid's mediaType
+            // For 'mixed' mediaType, we need to detect if it's a movie or TV show
+            const itemMediaType = 
+              (item as any).media_type ? 
+              (item as any).media_type : 
+              mediaType === 'mixed' ? 
+                ('title' in item ? 'movie' : 'tv') : 
+                mediaType;
+                
+            return (
+              <MediaCard
+                key={item.id}
+                media={item}
+                mediaType={itemMediaType as 'movie' | 'tv'}
+                className="animate-scale-in"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              />
+            );
+          })}
         </div>
       )}
     </section>

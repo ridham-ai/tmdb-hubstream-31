@@ -1,4 +1,3 @@
-
 export interface Movie {
   id: number;
   title: string;
@@ -14,6 +13,7 @@ export interface Movie {
   original_language: string;
   original_title: string;
   video: boolean;
+  media_type?: 'movie';
 }
 
 export interface TVShow {
@@ -29,6 +29,7 @@ export interface TVShow {
   popularity: number;
   original_language: string;
   original_name: string;
+  media_type?: 'tv';
 }
 
 export interface Genre {
@@ -113,7 +114,6 @@ export interface VideosResponse {
   results: VideoResult[];
 }
 
-// Add the missing TMDBResponse interface
 export interface TMDBResponse<T> {
   page: number;
   results: T[];
