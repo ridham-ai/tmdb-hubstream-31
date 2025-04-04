@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface MediaGridProps {
   items: (Movie | TVShow)[];
-  mediaType: 'movie' | 'tv';
+  mediaType: 'movie' | 'tv' | 'mixed';
   className?: string;
   title?: string;
   isLoading?: boolean;
@@ -41,7 +41,7 @@ const MediaGrid: React.FC<MediaGridProps> = ({
             <MediaCard
               key={item.id}
               media={item}
-              mediaType={mediaType}
+              mediaType={item.media_type || mediaType}
               className="animate-scale-in"
               style={{ animationDelay: `${index * 0.05}s` }}
             />
