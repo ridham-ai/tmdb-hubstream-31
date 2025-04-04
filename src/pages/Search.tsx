@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -17,7 +16,6 @@ const Search: React.FC = () => {
   );
   const [page, setPage] = useState(1);
   
-  // Update searchParams when any filter changes
   useEffect(() => {
     const params: Record<string, string> = {};
     if (searchTerm) params.q = searchTerm;
@@ -25,12 +23,10 @@ const Search: React.FC = () => {
     setSearchParams(params);
   }, [searchTerm, activeTab, setSearchParams]);
   
-  // Reset page when search term or type changes
   useEffect(() => {
     setPage(1);
   }, [searchTerm, activeTab]);
   
-  // Search queries
   const {
     data: movieResults,
     isLoading: isLoadingMovies,
@@ -61,14 +57,12 @@ const Search: React.FC = () => {
     setPage(1);
   };
   
-  // Get combined results for 'all' tab or specific results for other tabs
   const getResults = () => {
     if (activeTab === 'all' && movieResults?.results && tvResults?.results) {
       const combinedResults = [
         ...movieResults.results.map(item => ({ ...item, media_type: 'movie' })),
         ...tvResults.results.map(item => ({ ...item, media_type: 'tv' }))
       ];
-      // Sort by popularity (if available)
       return combinedResults.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
     } else if (activeTab === 'movies') {
       return movieResults?.results || [];
@@ -82,7 +76,6 @@ const Search: React.FC = () => {
   const isLoading = (activeTab === 'movies' || activeTab === 'all') && isLoadingMovies || 
                    (activeTab === 'tv' || activeTab === 'all') && isLoadingTV;
   
-  // Calculate total results and pages for pagination
   const getTotalResults = () => {
     if (activeTab === 'all') {
       const movieTotal = movieResults?.total_results || 0;
@@ -110,7 +103,6 @@ const Search: React.FC = () => {
   const totalResults = getTotalResults();
   const totalPages = getTotalPages();
   
-  // Calculate page numbers to show
   const pageNumbers = [];
   if (totalPages) {
     const startPage = Math.max(1, page - 2);
@@ -127,7 +119,6 @@ const Search: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-6 animate-fade-in">Search</h1>
           
-          {/* Search form */}
           <form 
             onSubmit={handleSearch}
             className="relative mb-8 animate-slide-up"
@@ -157,7 +148,6 @@ const Search: React.FC = () => {
             </div>
           </form>
           
-          {/* Tabs */}
           <div className="flex space-x-4 mb-6 animate-fade-in">
             <button
               onClick={() => setActiveTab('all')}
@@ -200,7 +190,6 @@ const Search: React.FC = () => {
           </div>
         </div>
         
-        {/* Search results */}
         {searchTerm ? (
           <div>
             {totalResults !== undefined && (
@@ -212,7 +201,7 @@ const Search: React.FC = () => {
             {results && results.length > 0 ? (
               <MediaGrid
                 items={results}
-                mediaType={activeTab === 'movies' ? 'movie' : activeTab === 'tv' ? 'tv' : 'mixed'}
+                mediaType={activeTab === 'movies' ? 'movie' : activeTab === 'tv' ? 'tv' : 'movie'}
                 isLoading={isLoading}
               />
             ) : !isLoading ? (
@@ -224,7 +213,6 @@ const Search: React.FC = () => {
               </div>
             ) : null}
             
-            {/* Pagination */}
             {totalPages && totalPages > 1 && (
               <div className="flex justify-center mt-8 space-x-2">
                 <button

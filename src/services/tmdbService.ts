@@ -1,7 +1,8 @@
 
 import { Movie, TVShow, TMDBResponse, MovieDetails, TVShowDetails, MovieCredits, VideosResponse } from '@/types/tmdb';
 
-const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '08c748f7d51cbcbf3189168114145568';
+// Vite uses import.meta.env instead of process.env
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY || '08c748f7d51cbcbf3189168114145568';
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 
