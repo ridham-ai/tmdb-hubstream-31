@@ -19,6 +19,7 @@ import Layout from '@/components/Layout';
 import MediaRow from '@/components/MediaRow';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import TVSeasonSelector from '@/components/tv/TVSeasonSelector';
 import { 
   getTVShowDetails, 
   getTVShowCredits, 
@@ -85,6 +86,17 @@ const TVDetails: React.FC = () => {
       }
     }
   }, [videosData]);
+
+  // Set initial season when TV show data loads
+  useEffect(() => {
+    if (tvShow?.seasons) {
+      const firstValidSeason = tvShow.seasons.find(s => s.episode_count > 0 && s.season_number > 0);
+      if (firstValidSeason) {
+        setSelectedSeason(firstValidSeason.season_number);
+        setSelectedEpisode(1);
+      }
+    }
+  }, [tvShow?.seasons]);
   
   // Check if TV show is in watchlist
   const inWatchlist = tvShow ? isInWatchlist(tvShow.id, 'tv') : false;
@@ -158,16 +170,22 @@ const TVDetails: React.FC = () => {
   const handleWatchNow = () => {
     if (!id || !tvShow?.seasons?.length) return;
     
-    // Default to first season with episodes
-    if (!selectedSeason) {
+    if (!selectedSeason || !selectedEpisode) {
       const firstValidSeason = tvShow.seasons.find(s => s.episode_count > 0 && s.season_number > 0);
       if (firstValidSeason) {
         setSelectedSeason(firstValidSeason.season_number);
         setSelectedEpisode(1);
+      } else {
+        return; // No valid seasons to play
       }
     }
     
     setIsPlayerOpen(true);
+  };
+  
+  const handleSeasonSelect = (seasonNumber: number) => {
+    setSelectedSeason(seasonNumber);
+    setSelectedEpisode(1); // Reset to first episode when changing seasons
   };
   
   useEffect(() => {
@@ -249,17 +267,19 @@ const TVDetails: React.FC = () => {
         </div>
         
         {/* Hero content */}
-        <div className="absolute bottom-0 left-0 w-full p-8 pb-16 z-10">
+        <div className="absolute bottom-0 left-0 w-full p-8 pb-32 z-10">
           <div className="container mx-auto">
             <div className="flex flex-col md:flex-row gap-8 items-end">
               <div className="w-full md:w-1/4 lg:w-1/5 hidden md:block">
-                <div className="rounded-xl overflow-hidden shadow-lg transform -translate-y-16 hover:scale-105 transition-transform duration-300">
-                  <img 
-                    src={getPosterUrl(tvShow.poster_path)}
-                    alt={tvShow.name}
-                    className="w-full"
-                  />
-                </div>
+                {tvShow.poster_path && (
+                  <div className="rounded-xl overflow-hidden shadow-lg transform -translate-y-16 hover:scale-105 transition-transform duration-300">
+                    <img 
+                      src={getPosterUrl(tvShow.poster_path)}
+                      alt={tvShow.name}
+                      className="w-full"
+                    />
+                  </div>
+                )}
               </div>
               
               <div className="flex-1">
@@ -274,6 +294,7 @@ const TVDetails: React.FC = () => {
                     onClick={handleWatchNow}
                     className="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg flex items-center gap-2 transition-colors"
                   >
+                    <Play className="w-5 h-5" />
                     Watch Now
                   </button>
                   
@@ -282,6 +303,7 @@ const TVDetails: React.FC = () => {
                       onClick={() => setIsTrailerOpen(true)}
                       className="border border-white/30 bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white py-3 px-6 rounded-lg flex items-center gap-2 transition-colors"
                     >
+                      <PlayCircle className="w-5 h-5" />
                       Watch Trailer
                     </button>
                   )}
@@ -292,34 +314,39 @@ const TVDetails: React.FC = () => {
         </div>
       </div>
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-16 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-24 relative z-10">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Poster */}
+          {/* Poster and Action Buttons */}
           <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0 animate-fade-in">
-            <div className="md:hidden rounded-xl overflow-hidden shadow-lg hover-card mb-6">
-              <img
-                src={getPosterUrl(tvShow.poster_path)}
-                alt={tvShow.name}
-                className="w-full"
-              />
-            </div>
-            
-            <div className="space-y-6 backdrop-blur-sm bg-card/20 p-6 rounded-xl border border-border/40">
-              <div className="hidden md:block rounded-xl overflow-hidden shadow-lg hover-card">
+            <div className="md:hidden rounded-xl overflow-hidden shadow-lg mb-6">
+              {tvShow.poster_path && (
                 <img
                   src={getPosterUrl(tvShow.poster_path)}
                   alt={tvShow.name}
                   className="w-full"
                 />
+              )}
+            </div>
+            
+            <div className="space-y-6 backdrop-blur-sm bg-card/20 p-6 rounded-xl border border-border/40">
+              <div className="hidden md:block rounded-xl overflow-hidden shadow-lg hover-card">
+                {tvShow.poster_path && (
+                  <img
+                    src={getPosterUrl(tvShow.poster_path)}
+                    alt={tvShow.name}
+                    className="w-full"
+                  />
+                )}
               </div>
               
               <div className="space-y-3">
                 <Button
                   onClick={handleWatchNow}
-                  className="w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg"
+                  className="w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2"
                   variant="default"
                   size="lg"
                 >
+                  <Play className="w-5 h-5" />
                   Watch Now
                 </Button>
                 
@@ -335,7 +362,7 @@ const TVDetails: React.FC = () => {
                     variant={inWatchlist ? "default" : "secondary"}
                   >
                     {inWatchlist ? <Check className="w-5 h-5" /> : <Heart className="w-5 h-5" />}
-                    {inWatchlist ? "In Watchlist" : "Add to Watchlist"}
+                    {inWatchlist ? "In Watchlist" : "Add"}
                   </Button>
                   
                   <Button
@@ -350,30 +377,11 @@ const TVDetails: React.FC = () => {
                 
                 {/* Season Selector */}
                 {tvShow.seasons && tvShow.seasons.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Select Season</h3>
-                    <div className="grid grid-cols-4 gap-2">
-                      {tvShow.seasons
-                        .filter(season => season.season_number > 0)
-                        .map((season) => (
-                          <button
-                            key={season.id}
-                            onClick={() => {
-                              setSelectedSeason(season.season_number);
-                              setSelectedEpisode(1);
-                            }}
-                            className={cn(
-                              "p-2 text-sm rounded-md transition-colors",
-                              selectedSeason === season.season_number
-                                ? "bg-primary text-white"
-                                : "bg-secondary/40 hover:bg-secondary/60"
-                            )}
-                          >
-                            {season.season_number}
-                          </button>
-                        ))}
-                    </div>
-                  </div>
+                  <TVSeasonSelector
+                    seasons={tvShow.seasons}
+                    selectedSeason={selectedSeason}
+                    onSelectSeason={handleSeasonSelect}
+                  />
                 )}
               </div>
             </div>
@@ -457,17 +465,19 @@ const TVDetails: React.FC = () => {
               <h2 className="text-xl font-semibold mb-3">Overview</h2>
               <Card className="bg-card/30 backdrop-blur-sm border-border/40">
                 <CardContent className="p-6">
-                  <p className="leading-relaxed">{tvShow.overview}</p>
+                  <p className="leading-relaxed">{tvShow.overview || "No overview available."}</p>
                 </CardContent>
               </Card>
             </div>
             
             {/* Seasons */}
-            {tvShow.seasons && tvShow.seasons.length > 0 && (
+            {tvShow.seasons && tvShow.seasons.filter(season => season.season_number > 0).length > 0 && (
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-4">Seasons</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {tvShow.seasons.filter(season => season.season_number > 0).map((season) => (
+                  {tvShow.seasons
+                    .filter(season => season.season_number > 0)
+                    .map((season) => (
                     <Card 
                       key={season.id} 
                       className={cn(
